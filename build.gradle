@@ -1,0 +1,95 @@
+plugins {
+    id('java')
+    id('org.springframework.boot') version '3.5.4'
+    id('io.spring.dependency-management') version '1.1.7'
+    id("com.github.node-gradle.node") version "7.1.0"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+node {
+    download = true
+    version = '24.8.0'
+}
+
+apply plugin: 'idea'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.springframework.boot'
+
+version = '1.0-SNAPSHOT'
+group = 'com.integreat'
+
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+tasks.wrapper {
+    gradleVersion = '9.0.0'
+}
+
+// There are two options for local front-end development. Configure SpringBoot to look for static resources on the
+// filesystem build output path. Alternatively, run a server using npm start. This will start a server on a different
+// port instead of reusing the SpringBoot server. Having gradle build on touch will be slightly slower and more heavy
+// but is more representative of an intended prod configuration.
+//1. gradlew buildReact --continuous
+//2. npm start
+tasks.register('buildReact', NpmTask) {
+    args = ['run', 'build']
+    workingDir = file('frontend')
+    environment = ['BUILD_PATH': '../build/resources/main/web']
+}
+tasks.processResources.finalizedBy('buildReact')
+
+tasks.register('watchReact', NpmTask) {
+    args = ['run', 'watch']
+    workingDir = file('frontend')
+    environment = ['BUILD_PATH': '../build/resources/main/web']
+}
+
+tasks.bootTestRun {
+    doFirst {
+        println "Classpath for bootTestRun:"
+        println classpath.asPath
+    }
+}
+
+dependencies {
+    implementation('org.springframework.boot:spring-boot-starter-web') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.40'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.40'
+    compileOnly 'org.projectlombok:lombok:1.18.40'
+    testCompileOnly 'org.projectlombok:lombok:1.18.40'
+
+    //Intuit API
+    implementation 'com.intuit.quickbooks-online:oauth2-platform-api:6.7.0'
+    implementation 'com.intuit.quickbooks-online:ipp-v3-java-devkit:6.7.0'
+    implementation 'com.intuit.quickbooks-online:ipp-v3-java-data:6.7.0'
+
+    //Springboot
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:'
+
+    //Security
+    implementation 'org.bitbucket.b_c:jose4j:0.9.6'
+
+    //Persistence and Serialization
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.2'
+    implementation 'org.xerial:sqlite-jdbc'
+    implementation 'org.hibernate.orm:hibernate-community-dialects'
+
+    //Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+

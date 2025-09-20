@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Close Window</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+        // Try to close immediately on load
+        function tryClose() {
+            // Some browsers require the opener check; if available, reduce restrictions
+            if (window.opener && !window.opener.closed) {
+                window.close();
+            } else {
+                // Attempt regardless (will only work if script-opened)
+                window.close();
+            }
+        }
+
+        window.addEventListener('load', () => {
+            //tryClose();
+            // Fallback: try again shortly after load
+            setTimeout(tryClose, 150);
+        });
+    </script>
+    <style>
+        /* Keep the page visually empty */
+        html, body { height: 100%; margin: 0; background: #fff; }
+    </style>
+</head>
+<body>
+<!-- Intentionally left blank. If the window does not close automatically,
+     it likely wasn't opened via window.open or browser prevented it. -->
+</body>
+</html>
